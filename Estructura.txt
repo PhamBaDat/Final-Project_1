@@ -1,0 +1,25 @@
+Final-Project_1
+|
+|---Escenarios
+|    |---escenario_1
+|    |    |
+|    |    |---Imgenes(Biblioteca de Imagenes para escenario 1)
+|    |    |---__init__.py (Controlador)
+|    |    |---manager_scenario1.py(programa de scenario 1)
+|    |    |---text.json(Texto para scenario 1)
+|    |    
+|    |----escenario_2
+|    |
+|    |----escenario_3
+|    |
+|    |---OIP.jpeg(Imagen para escenario general)
+|    |---texto.json(Texto para escenario general)
+|
+|---Imagenes(Biblioteca de imagenes para el menu)
+|    |
+|    |---fondo
+|
+|---Estructura
+|---main(Programa principal)
+|---README.md
+|---test.py
