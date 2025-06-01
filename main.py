@@ -216,6 +216,10 @@ class Scene:
         self.message_time = 0
         self.text_finished = False
 
+        # Tách buttons thành 2 nhóm
+        self.support_buttons = [btn for btn in buttons if btn["action"] in ("save", "menu")]
+        self.main_buttons = [btn for btn in buttons if btn["action"] not in ("save", "menu")]
+
         # Cho chạy chữ dần
         self.char_index = 0
         self.displayed_text = ""
@@ -223,7 +227,29 @@ class Scene:
         self.last_update_time = time.time()
 
         # Khung thoại
-        self.dialog_rect = pygame.Rect(50, HEIGHT - 200, WIDTH - 100, 150)
+        self.dialog_rect = pygame.Rect(50, HEIGHT - 200, WIDTH - 100, 250)
+
+        # --- THÊM PHẦN CHIA VỊ TRÍ BUTTON NẰM NGANG ---
+        if self.scene_name != "menu":
+            self.arrange_buttons_horizontally()
+
+        def arrange_buttons_horizontally(self):
+            n = len(self.buttons)
+            if n == 0:
+                return
+            # Giả sử tất cả button có cùng kích thước (lấy của button đầu)
+            btn_width = self.buttons[0]["rect"][2]
+            btn_height = self.buttons[0]["rect"][3]
+            spacing = 50  # khoảng cách giữa các nút
+
+            total_width = n * btn_width + (n - 1) * spacing
+            start_x = (WIDTH - total_width) // 2
+            fixed_y = HEIGHT - 150  # có thể chỉnh y theo ý
+
+            for i, btn in enumerate(self.buttons):
+                x = start_x + i * (btn_width + spacing)
+                # giữ y cũ hoặc dùng fixed_y
+                btn["rect"] = pygame.Rect(x, fixed_y, btn_width, btn_height)
 
     def draw_dialog_box(self, rect, text, font, text_color = (255,255,255), box_color = (0,0,0,180), border_color = (255,255,255), padding = 20):
         # Vẽ nền hộp thoại đen có alpha (mờ)
