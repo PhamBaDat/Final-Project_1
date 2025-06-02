@@ -17,35 +17,90 @@ FONT = pygame.font.Font(None, 50)
 WHITE = (255, 255, 255)
 BLUE = (50, 50, 200)
 HOVER_BLUE = (100, 100, 255)
+# BLUE = (160,82,45)          # Đậm hơn
+# HOVER_BLUE = (139,69,19)    # Đậm hơn chút khi hover
+
+MENU_BUTTON_COLOR = (34, 78, 74)         # Xanh rêu đậm
+MENU_BUTTON_HOVER = (64, 128, 124)       # Xanh rêu sáng hơn
+MENU_TEXT_COLOR = (255, 255, 224)        # Vàng nhạt kiểu "ivory"
 
 FONT_PATH = os.path.join("Final-Project_1", "fonts", "Montserrat-Bold.ttf")
 TITLE_FONT = pygame.font.Font(FONT_PATH, 64)
+TITLE_FONT_2 = pygame.font.Font(FONT_PATH, 55)
 BUTTON_FONT = pygame.font.Font(FONT_PATH, 40)
 
-def render_text_with_shadow(text, font, color, shadow_color, offset=(2, 2)):
+def render_text_with_shadow(text, font, color, shadow_color, offset=(3, 3)):
     base = font.render(text, True, color)
     shadow = font.render(text, True, shadow_color)
-    surface = pygame.Surface((base.get_width() + offset[0], base.get_height() + offset[1]), pygame.SRCALPHA)
-    surface.blit(shadow, offset)
-    surface.blit(base, (0, 0))
+    surface = pygame.Surface((base.get_width() + offset[0]*2, base.get_height() + offset[1]*2), pygame.SRCALPHA)
+
+    # Vẽ bóng nhiều lần để đậm hơn
+    for dx in range(-1, 2):
+        for dy in range(-1, 2):
+            surface.blit(shadow, (offset[0]+dx, offset[1]+dy))
+    surface.blit(base, (offset[0], offset[1]))
     return surface
 
 title_surface = render_text_with_shadow("WHAT IF ... SAINT - PETERSBURG !", TITLE_FONT, (255, 255, 255), (0, 0, 0))
 screen.blit(title_surface, (WIDTH // 2 - title_surface.get_width() // 2, 80))
 
-def draw_button(screen, rect, text, font, mouse_pos, color_normal, color_hover):
+def draw_button(screen, rect, text, font, mouse_pos, color_normal, color_hover, tooltip_text=None):
     is_hovered = rect.collidepoint(mouse_pos)
     color = color_hover if is_hovered else color_normal
-    alpha = 255 if is_hovered else 100  # Sáng khi hover, mờ khi không
+    alpha = 255 if is_hovered else 100          # Sáng khi di chuột vàovào
 
     button_surface = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
     button_surface.fill((*color, alpha))
-    pygame.draw.rect(button_surface, (*color, alpha), button_surface.get_rect(), border_radius=10)
+    pygame.draw.rect(button_surface, (*color, alpha), button_surface.get_rect(), border_radius=20)
     screen.blit(button_surface, rect.topleft)
 
-    text_surface = font.render(text, True, (255, 255, 255))
+    text_surface = font.render(text, True, MENU_TEXT_COLOR)
     text_rect = text_surface.get_rect(center=rect.center)
     screen.blit(text_surface, text_rect)
+
+    # Vẽ tooltip nếu hover và có tooltip_text
+    if is_hovered and tooltip_text:
+        draw_tooltip(screen, tooltip_text, font, rect.topright)
+
+def draw_tooltip(screen, text, font, pos, max_width=400, padding=10):
+    # Tách text thành các dòng vừa max_width
+    words = text.split(' ')
+    lines = []
+    line = ''
+    for word in words:
+        test_line = line + (' ' if line else '') + word
+        if font.size(test_line)[0] <= max_width:
+            line = test_line
+        else:
+            lines.append(line)
+            line = word
+    if line:
+        lines.append(line)
+
+    line_height = font.get_height() + 2
+    height = line_height * len(lines) + padding * 2
+    width = max(font.size(line)[0] for line in lines) + padding * 2
+
+    # Tạo surface tooltip
+    tooltip_surf = pygame.Surface((width, height), pygame.SRCALPHA)
+    pygame.draw.rect(tooltip_surf, (255, 255, 255, 255), tooltip_surf.get_rect(), border_radius=8)
+    pygame.draw.rect(tooltip_surf, (0, 0, 0, 255), tooltip_surf.get_rect(), 2, border_radius=8)
+
+    # Vẽ text lên tooltip
+    y = padding
+    for line in lines:
+        line_surf = font.render(line, True, (0, 0, 0))
+        tooltip_surf.blit(line_surf, (padding, y))
+        y += line_height
+
+    # Tính vị trí vẽ tooltip, tránh ra ngoài màn hình
+    x, y = pos
+    if x + width > WIDTH:
+        x = WIDTH - width - 10
+    if y + height > HEIGHT:
+        y = HEIGHT - height - 10
+
+    screen.blit(tooltip_surf, (x, y))
 
 def save_game(slot, data):
     print(f"[DEBUG SAVE] Slot {slot}, Data: {data}")  # Thêm dòng này
@@ -72,11 +127,12 @@ def load_game(slot):
 def assign_default_tooltips(buttons):
     letters = ['A', 'B', 'C']
     for i, btn in enumerate(buttons):
+        # Gán label ngắn cho nút nếu chưa có tooltip_text
         if "tooltip_text" not in btn or not btn["tooltip_text"]:
             if i < len(letters):
-                btn["tooltip_text"] = f"Phương án {letters[i]}"
+                btn["tooltip_text"] = f"OPTION {letters[i]}"
             else:
-                btn["tooltip_text"] = f"Phương án {i+1}"
+                btn["tooltip_text"] = f"OPTION {i+1}"
     return buttons
 
 def parse_position(pos, size, screen_size):
@@ -226,10 +282,13 @@ class Scene:
         self.message_time = 0
         self.text_finished = False
 
+        # Gán tooltip mặc định nếu chưa có
+        self.buttons = assign_default_tooltips(self.buttons)
+
         # Tách buttons thành 2 nhóm
-        support_actions = ("save", "menu", "exit", "new_game")
-        self.support_buttons = [btn for btn in buttons if btn["action"] in support_actions]
-        self.main_buttons = [btn for btn in buttons if btn["action"] not in support_actions]
+        support_actions = ("save", "menu", "exit", "new_game", "continue")
+        self.support_buttons = [btn for btn in self.buttons if btn["action"] in support_actions]
+        self.main_buttons = [btn for btn in self.buttons if btn["action"] not in support_actions]
 
         
 
@@ -332,10 +391,29 @@ class Scene:
             self.screen.blit(self.image, (0,0))
 
         if self.scene_name == "menu":
-            # Vẽ chữ Main Menu trên đầu, ví dụ ở giữa ngang, y = 150 px
-            title_surface = FONT.render(self.full_text, True, WHITE)
-            title_rect = title_surface.get_rect(center=(WIDTH // 2, 400))
+            # Vẽ tiêu đề đẹp có đổ bóng
+            title_text = "WHAT IF ... SAINT - PETERSBURG !"
+            title_surface = render_text_with_shadow(title_text, TITLE_FONT, (150, 150, 150), (50, 50, 50))
+            title_rect = title_surface.get_rect(center=(WIDTH // 2, 100))  # Canh giữa ngang, cách trên 100 px
             self.screen.blit(title_surface, title_rect)
+
+            # Vẽ chữ Main Menu trên đầu, ví dụ ở giữa ngang, y = 150 px
+            main_menu_text = "Main Menu"
+            main_menu_surface = render_text_with_shadow(main_menu_text, TITLE_FONT_2, (32,178,170), (0,0,0))
+            main_menu_rect = main_menu_surface.get_rect(topleft=(WIDTH * 0.75, 350))  # Cách tiêu đề khoảng 80 px
+            self.screen.blit(main_menu_surface, main_menu_rect)
+
+            # Dịch các nút sang phải
+            btn_x = int(WIDTH * 0.76)
+            btn_y_start = main_menu_rect.bottom + 40  # Cách "Main Menu" khoảng 40px
+            spacing = 20
+
+            for i, btn in enumerate(self.buttons):
+                btn_width, btn_height = btn["rect"].size
+                new_x = btn_x
+                new_y = btn_y_start + i * (btn_height + spacing)
+                btn["rect"].topleft = (new_x, new_y)
+
         else:
             # Cập nhật chữ chạy dần
             self.update_text()
@@ -346,12 +424,19 @@ class Scene:
         
         # Chỉ vẽ button khi đã chạy full_text
         if self.scene_name == "menu" or self.text_finished:
-            # Vẽ main buttons căn ngang
+            # Vẽ tất cả nút bình thường (không vẽ tooltip trong draw_button)
             for btn in self.main_buttons:
-                draw_button(self.screen, btn["rect"], btn["text"], FONT, mouse_pos, BLUE, HOVER_BLUE)
-            # Vẽ support buttons giữ nguyên vị trí
-            for btn in self.support_buttons:
-                draw_button(self.screen, btn["rect"], btn["text"], FONT, mouse_pos, BLUE, HOVER_BLUE)
+                draw_button(self.screen, btn["rect"], btn.get("tooltip_text", btn["text"]), FONT, mouse_pos, BLUE, HOVER_BLUE)
+            
+            # Tìm nút main nào đang hover, vẽ tooltip cho nút đó
+            for btn in self.main_buttons:
+                if btn["rect"].collidepoint(mouse_pos):
+                    tooltip_text = btn.get("text")
+                    draw_tooltip(self.screen, tooltip_text, FONT, btn["rect"].topright)
+                    break  # chỉ vẽ tooltip cho nút đầu tiên được hover
+
+        for btn in self.support_buttons:
+                draw_button(self.screen, btn["rect"], btn["text"], FONT, mouse_pos, MENU_BUTTON_COLOR, MENU_BUTTON_HOVER)
 
         if self.message and time.time() - self.message_time < 2:
             msg_surf = FONT.render(self.message, True, (255, 255, 0))                           # Tạo surface chữ màu vàng
@@ -360,7 +445,7 @@ class Scene:
             self.message = ""           # Nếu hết 2 giây hoặc không có message, xóa tin nhắn đi
 
     def handle_event(self, event):
-        # Khi người chơi click, ta có thể hiện luôn hết chữ đang chạy dần đễ đỡ chờchờ
+        # Khi người chơi click, ta có thể hiện luôn hết chữ đang chạy dần đễ đỡ chờ
         if event.type == pygame.MOUSEBUTTONDOWN:
             if not self.text_finished:
                 # Hiện hết text từng dòng nếu chưa xong
