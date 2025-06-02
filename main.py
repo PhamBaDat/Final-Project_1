@@ -69,6 +69,16 @@ def load_game(slot):
             }
     return None
 
+def assign_default_tooltips(buttons):
+    letters = ['A', 'B', 'C']
+    for i, btn in enumerate(buttons):
+        if "tooltip_text" not in btn or not btn["tooltip_text"]:
+            if i < len(letters):
+                btn["tooltip_text"] = f"Phương án {letters[i]}"
+            else:
+                btn["tooltip_text"] = f"Phương án {i+1}"
+    return buttons
+
 def parse_position(pos, size, screen_size):
     if isinstance(pos, str):
         if pos == "center":
@@ -217,13 +227,18 @@ class Scene:
         self.text_finished = False
 
         # Tách buttons thành 2 nhóm
-        self.support_buttons = [btn for btn in buttons if btn["action"] in ("save", "menu")]
-        self.main_buttons = [btn for btn in buttons if btn["action"] not in ("save", "menu")]
+        support_actions = ("save", "menu", "exit", "new_game")
+        self.support_buttons = [btn for btn in buttons if btn["action"] in support_actions]
+        self.main_buttons = [btn for btn in buttons if btn["action"] not in support_actions]
 
-        # Cho chạy chữ dần
+        
+
+        # ---- CHỈNH PHẦN CHẠY CHỮ ----
+        self.lines = self.full_text.split('\n')  # tách text theo dòng
+        self.current_line_index = 0
         self.char_index = 0
         self.displayed_text = ""
-        self.text_speed = 40 # ký tự / giây
+        self.text_speed = 40  # ký tự/giây
         self.last_update_time = time.time()
 
         # Khung thoại
@@ -233,23 +248,23 @@ class Scene:
         if self.scene_name != "menu":
             self.arrange_buttons_horizontally()
 
-        def arrange_buttons_horizontally(self):
-            n = len(self.buttons)
-            if n == 0:
-                return
-            # Giả sử tất cả button có cùng kích thước (lấy của button đầu)
-            btn_width = self.buttons[0]["rect"][2]
-            btn_height = self.buttons[0]["rect"][3]
-            spacing = 50  # khoảng cách giữa các nút
+    def arrange_buttons_horizontally(self):
+        n = len(self.main_buttons)
+        if n == 0:
+            return
+        # Giả sử tất cả button có cùng kích thước (lấy của button đầu)
+        btn_width = self.main_buttons[0]["rect"][2]
+        btn_height = self.main_buttons[0]["rect"][3]
+        spacing = 50  # khoảng cách giữa các nút
 
-            total_width = n * btn_width + (n - 1) * spacing
-            start_x = (WIDTH - total_width) // 2
-            fixed_y = HEIGHT - 150  # có thể chỉnh y theo ý
+        total_width = n * btn_width + (n - 1) * spacing
+        start_x = (WIDTH - total_width) // 2
+        fixed_y = HEIGHT // 2 - btn_height // 2  # có thể chỉnh y theo ý
 
-            for i, btn in enumerate(self.buttons):
-                x = start_x + i * (btn_width + spacing)
-                # giữ y cũ hoặc dùng fixed_y
-                btn["rect"] = pygame.Rect(x, fixed_y, btn_width, btn_height)
+        for i, btn in enumerate(self.main_buttons):
+            x = start_x + i * (btn_width + spacing)
+            # giữ y cũ hoặc dùng fixed_y
+            btn["rect"] = pygame.Rect(x, fixed_y, btn_width, btn_height)
 
     def draw_dialog_box(self, rect, text, font, text_color = (255,255,255), box_color = (0,0,0,180), border_color = (255,255,255), padding = 20):
         # Vẽ nền hộp thoại đen có alpha (mờ)
@@ -259,43 +274,57 @@ class Scene:
         # Vẽ viền
         pygame.draw.rect(self.screen, border_color, rect, 3)
 
-        # Xuống dòng thủ côngg
-        lines = []
-        words = text.split(" ")
-        line = ''
         max_width = rect.width - 2*padding
-        for word in words:
-            test_line = line + word + " "
-            if font.size(test_line)[0] > max_width:
-                lines.append(line)
-                line = word + " "
-            else:
-                line = test_line
-        lines.append(line)
+        max_height = rect.height - 2*padding
+        line_height = font.get_height() + 5
 
+        # Tách text theo dòng có sẵn \n trước
+        paragraphs = text.split('\n')
         y = rect.top + padding
-        for line in lines:
-            line_surf = font.render(line, True, text_color)
-            self.screen.blit(line_surf, (rect.left + padding, y))
-            y += font.get_height() + 5
+
+        # Xuống dòng thủ côngg
+        for para in paragraphs:
+            words = para.split(' ')
+            line = ''
+            for word in words:
+                test_line = (line + ' ' + word).strip()
+                if font.size(test_line)[0] <= max_width:
+                    line = test_line
+                else:
+                    # Vẽ dòng hiện tại
+                    line_surf = font.render(line, True, text_color)
+                    if y + line_height > rect.top + max_height:
+                        # Đã vượt quá chiều cao hộp thoại, dừng vẽ
+                        return
+                    self.screen.blit(line_surf, (rect.left + padding, y))
+                    y += line_height
+                    line = word
+            # Vẽ dòng cuối cùng của đoạn
+            if line:
+                line_surf = font.render(line, True, text_color)
+                if y + line_height > rect.top + max_height:
+                    return
+                self.screen.blit(line_surf, (rect.left + padding, y))
+                y += line_height
 
     def update_text(self):
+        if self.text_finished:
+            return
+
         now = time.time()  # Lấy thời gian hiện tại (giây từ epoch)
         elapsed = now - self.last_update_time  # Thời gian trôi qua kể từ lần cập nhật cuối
         chars_to_add = int(elapsed * self.text_speed)  # Số ký tự cần thêm dựa trên tốc độ text_speed
 
         if chars_to_add > 0:
-            # Cập nhật vị trí ký tự hiện tại, tối đa không vượt quá độ dài full_text
-            self.char_index = min(self.char_index + chars_to_add, len(self.full_text))
-
-            # Cập nhật đoạn text đang hiển thị: từ đầu đến char_index
-            self.displayed_text = self.full_text[:self.char_index]
-
-            # Cập nhật lại thời gian lần cuối đã update
+            current_line = self.lines[self.current_line_index]
+            self.char_index = min(self.char_index + chars_to_add, len(current_line))
+            self.displayed_text = current_line[:self.char_index]
             self.last_update_time = now
 
-            if self.char_index == len(self.full_text):
-                self.text_finished = True
+            # Nếu đã hiển thị hết dòng hiện tại thì thôi chờ click để chuyển dòng
+            if self.char_index == len(current_line):
+                # Có thể set flag chờ click nếu muốn, hoặc để ở đây thôi
+                pass
       
     def draw(self):
         self.screen.fill((0,0,0))
@@ -314,71 +343,90 @@ class Scene:
             self.draw_dialog_box(self.dialog_rect, self.displayed_text, FONT)
 
         mouse_pos = pygame.mouse.get_pos()
+        
         # Chỉ vẽ button khi đã chạy full_text
         if self.scene_name == "menu" or self.text_finished:
-            for btn in self.buttons:
+            # Vẽ main buttons căn ngang
+            for btn in self.main_buttons:
+                draw_button(self.screen, btn["rect"], btn["text"], FONT, mouse_pos, BLUE, HOVER_BLUE)
+            # Vẽ support buttons giữ nguyên vị trí
+            for btn in self.support_buttons:
                 draw_button(self.screen, btn["rect"], btn["text"], FONT, mouse_pos, BLUE, HOVER_BLUE)
 
         if self.message and time.time() - self.message_time < 2:
-            msg_surf = FONT.render(self.message, True, (255, 255, 0))
-            self.screen.blit(msg_surf, (WIDTH//2 - msg_surf.get_width()//2, HEIGHT - 200))
+            msg_surf = FONT.render(self.message, True, (255, 255, 0))                           # Tạo surface chữ màu vàng
+            self.screen.blit(msg_surf, (WIDTH//2 - msg_surf.get_width()//2, HEIGHT - 200))      # Vẽ chữ ở giữa dưới màn hình
         else:
-            self.message = ""
+            self.message = ""           # Nếu hết 2 giây hoặc không có message, xóa tin nhắn đi
 
     def handle_event(self, event):
         # Khi người chơi click, ta có thể hiện luôn hết chữ đang chạy dần đễ đỡ chờchờ
         if event.type == pygame.MOUSEBUTTONDOWN:
             if not self.text_finished:
-                # Hiện hết text nếu chưa xong
-                self.char_index = len(self.full_text)
-                self.displayed_text = self.full_text
-                self.text_finished = True
+                # Hiện hết text từng dòng nếu chưa xong
+                current_line = self.lines[self.current_line_index]
+                if self.char_index < len(current_line):
+                    # Hiện hết dòng hiện tại nếu chưa hết
+                    self.char_index = len(current_line)
+                    self.displayed_text = current_line
+                else:
+                    # Chuyển sang dòng tiếp theo hoặc kết thúc text
+                    if self.current_line_index < len(self.lines) - 1:
+                        self.current_line_index += 1
+                        self.char_index = 0
+                        self.displayed_text = ""
+                        self.last_update_time = time.time()
+                    else:
+                        self.text_finished = True
                 return None
             
-            # Các phần xử lý cũ như save, chuyển scene...
-            for btn in self.buttons:
+            # Kiểm tra main buttons
+            for btn in self.main_buttons:
                 if btn["rect"].collidepoint(event.pos):
-                    action = btn["action"]
-                    if action == "save":
-                        print(f"[DEBUG] Saving scene: {self.scene_name}")
-                        print(f"[DEBUG] Saving scene: {self.title}")
-                        print(f"[DEBUG] Saving scene: {self.save_data}")
-                        slot = save_slot_menu(action="save", current_save_data=self.save_data, scene_name=self.scene_name, scene_title=self.title)
-                        if isinstance(slot, int):
-                            self.message = f"Game saved to slot {slot}!"
-                            self.message_time = time.time()
-                        return slot  # có thể là int hoặc "menu"
-                    
-                    elif action == "continue":
-                        save_data = save_slot_menu(action="continue")
-                        if isinstance(save_data, dict):
-                            return save_data.get("scene", "scene1")
-                        else:
-                            return save_data  # có thể là "menu" hoặc None
+                    return self.process_action(btn["action"])
 
-                    elif action == "new_game":
-                        save_data = save_slot_menu(action="new_game")
-                        if isinstance(save_data, dict):
-                            return save_data.get("scene", "scene1")
-                        else:
-                            return save_data
-                        
-                    elif action == "menu":
-                        return "menu"   # Trở về menu chính
-                
-                    elif action == "exit":
-                        return "exit"   # Thoát game
-                    
-                    elif action.startswith("scene"):
-                        return action  # trả về tên scene, ví dụ "scene1", "scene2", ...
-                    
-                    return action
+            # Kiểm tra support buttons
+            for btn in self.support_buttons:
+                if btn["rect"].collidepoint(event.pos):
+                    return self.process_action(btn["action"])
 
-                
         elif event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
         return None
+
+    def process_action(self, action):
+        if action == "save":
+            slot = save_slot_menu(action="save", current_save_data=self.save_data, scene_name=self.scene_name, scene_title=self.title)
+            if isinstance(slot, int):
+                self.message = f"Game saved to slot {slot}!"
+                self.message_time = time.time()
+            return slot
+
+        elif action == "continue":
+            save_data = save_slot_menu(action="continue")
+            if isinstance(save_data, dict):
+                return save_data.get("scene", "scene1")
+            else:
+                return save_data
+
+        elif action == "new_game":
+            save_data = save_slot_menu(action="new_game")
+            if isinstance(save_data, dict):
+                return save_data.get("scene", "scene1")
+            else:
+                return save_data
+
+        elif action == "menu":
+            return "menu"
+
+        elif action == "exit":
+            return "exit"
+
+        elif action.startswith("scene"):
+            return action
+
+        return action
 
 def create_scene(name, save_data=None):
     data = scenes_data.get(name)
