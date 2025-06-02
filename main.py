@@ -440,13 +440,19 @@ class Scene:
 
         if self.message and time.time() - self.message_time < 2:
             msg_surf = FONT.render(self.message, True, (255, 255, 0))                           # Tạo surface chữ màu vàng
-            self.screen.blit(msg_surf, (WIDTH//2 - msg_surf.get_width()//2, HEIGHT - 200))      # Vẽ chữ ở giữa dưới màn hình
+            self.screen.blit(msg_surf, (WIDTH//2 - msg_surf.get_width()//2, HEIGHT - 250))      # Vẽ chữ ở giữa dưới màn hình
         else:
             self.message = ""           # Nếu hết 2 giây hoặc không có message, xóa tin nhắn đi
 
     def handle_event(self, event):
         # Khi người chơi click, ta có thể hiện luôn hết chữ đang chạy dần đễ đỡ chờ
         if event.type == pygame.MOUSEBUTTONDOWN:
+            # ✅ Luôn cho phép click support buttons
+            for btn in self.support_buttons:
+                if btn["rect"].collidepoint(event.pos):
+                    return self.process_action(btn["action"])
+                
+
             if not self.text_finished:
                 # Hiện hết text từng dòng nếu chưa xong
                 current_line = self.lines[self.current_line_index]
@@ -467,11 +473,6 @@ class Scene:
             
             # Kiểm tra main buttons
             for btn in self.main_buttons:
-                if btn["rect"].collidepoint(event.pos):
-                    return self.process_action(btn["action"])
-
-            # Kiểm tra support buttons
-            for btn in self.support_buttons:
                 if btn["rect"].collidepoint(event.pos):
                     return self.process_action(btn["action"])
 
