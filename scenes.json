@@ -7,7 +7,8 @@
       {"rect": ["center", "auto", 300, 50], "text": "Continue", "action": "continue"},
       {"rect": ["center", "auto", 300, 50], "text": "New Game", "action": "new_game"},
       {"rect": ["center", "auto", 300, 50], "text": "Exit", "action": "exit"}
-    ]
+    ],
+    "music": "Final-Project_1/Sounds/Musics/AoE2_Main_theme.mp3"
   },
   "scene1": {
     "title": "Введение",

@@ -24,10 +24,15 @@ MENU_BUTTON_COLOR = (34, 78, 74)         # Xanh rêu đậm
 MENU_BUTTON_HOVER = (64, 128, 124)       # Xanh rêu sáng hơn
 MENU_TEXT_COLOR = (255, 255, 224)        # Vàng nhạt kiểu "ivory"
 
+CLICK_SOUND = pygame.mixer.Sound(os.path.join("Final-Project_1", "Sounds", "Sound effect", "click.mp3"))
+HOVER_SOUND = pygame.mixer.Sound(os.path.join("Final-Project_1", "Sounds", "Sound effect", "hover.mp3"))
 FONT_PATH = os.path.join("Final-Project_1", "fonts", "Montserrat-Bold.ttf")
 TITLE_FONT = pygame.font.Font(FONT_PATH, 64)
 TITLE_FONT_2 = pygame.font.Font(FONT_PATH, 55)
 BUTTON_FONT = pygame.font.Font(FONT_PATH, 40)
+
+hover_states = {}  # dict lưu trạng thái hover từng nút theo id
+pygame.mixer.init()
 
 def render_text_with_shadow(text, font, color, shadow_color, offset=(3, 3)):
     base = font.render(text, True, color)
@@ -44,8 +49,25 @@ def render_text_with_shadow(text, font, color, shadow_color, offset=(3, 3)):
 title_surface = render_text_with_shadow("WHAT IF ... SAINT - PETERSBURG !", TITLE_FONT, (255, 255, 255), (0, 0, 0))
 screen.blit(title_surface, (WIDTH // 2 - title_surface.get_width() // 2, 80))
 
-def draw_button(screen, rect, text, font, mouse_pos, color_normal, color_hover, tooltip_text=None):
+def play_music(path):
+    if os.path.exists(path):
+        pygame.mixer.music.load(path)
+        pygame.mixer.music.play(-1)  # -1 để loop vô hạn
+    else:
+        print(f"[WARN] Không tìm thấy nhạc nền: {path}")
+
+def draw_button(screen, rect, text, font, mouse_pos, color_normal, color_hover, tooltip_text=None, hover_sound=None):
     is_hovered = rect.collidepoint(mouse_pos)
+    rect_id = id(rect)
+
+    # Phát âm thanh hover nếu hover lần đầu
+    if is_hovered and not hover_states.get(rect_id, False):
+        if hover_sound:
+            hover_sound.play()
+        hover_states[rect_id] = True
+    elif not is_hovered:
+        hover_states[rect_id] = False
+
     color = color_hover if is_hovered else color_normal
     alpha = 255 if is_hovered else 100          # Sáng khi di chuột vàovào
 
@@ -159,6 +181,8 @@ def save_slot_menu(action="save", current_save_data=None, scene_name=None, scene
     start_y = 200
     font = pygame.font.Font(None, 40)
 
+    hovered_buttons = {}
+
     for i in range(5):
         rect = pygame.Rect(WIDTH // 2 - slot_width // 2, start_y + i*(slot_height + 20), slot_width, slot_height)
         slot_rects.append(rect)
@@ -174,6 +198,17 @@ def save_slot_menu(action="save", current_save_data=None, scene_name=None, scene
         screen.blit(title_surf, (WIDTH // 2 - title_surf.get_width() // 2, 100))
 
         mouse_pos = pygame.mouse.get_pos()
+
+        # --- Cập nhật và phát hiệu ứng hover ---
+        all_rects = slot_rects + [menu_rect]
+        for rect in all_rects:
+            rect_id = id(rect)  # Dùng id làm key
+            is_hovered = rect.collidepoint(mouse_pos)
+            was_hovered = hovered_buttons.get(rect_id, False)
+            if is_hovered and not was_hovered:
+                HOVER_SOUND.play()
+            hovered_buttons[rect_id] = is_hovered
+
 
         for i, rect in enumerate(slot_rects):
             slot_num = slots[i]
@@ -196,6 +231,7 @@ def save_slot_menu(action="save", current_save_data=None, scene_name=None, scene
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for i, rect in enumerate(slot_rects):
                     if rect.collidepoint(event.pos):
+                        CLICK_SOUND.play()  
                         slot_num = slots[i]
                         if action == "save":
                             if current_save_data is not None and scene_name is not None and scene_title is not None:
@@ -232,6 +268,7 @@ def save_slot_menu(action="save", current_save_data=None, scene_name=None, scene
                                 print(f"Slot {slot_num} is empty!")
                     
                 if menu_rect.collidepoint(event.pos):
+                    CLICK_SOUND.play()  
                     # Trả về giá trị đặc biệt để quay lại menu
                     running = False
                     return "menu"
@@ -306,6 +343,11 @@ class Scene:
         # --- THÊM PHẦN CHIA VỊ TRÍ BUTTON NẰM NGANG ---
         if self.scene_name != "menu":
             self.arrange_buttons_horizontally()
+
+        # Chạy nhạc nền nếu có
+        music_path = scenes_data.get(scene_name, {}).get("music")
+        if music_path:
+            play_music(music_path)
 
     def arrange_buttons_horizontally(self):
         n = len(self.main_buttons)
@@ -426,7 +468,7 @@ class Scene:
         if self.scene_name == "menu" or self.text_finished:
             # Vẽ tất cả nút bình thường (không vẽ tooltip trong draw_button)
             for btn in self.main_buttons:
-                draw_button(self.screen, btn["rect"], btn.get("tooltip_text", btn["text"]), FONT, mouse_pos, BLUE, HOVER_BLUE)
+                draw_button(self.screen, btn["rect"], btn.get("tooltip_text", btn["text"]), FONT, mouse_pos, BLUE, HOVER_BLUE, hover_sound=HOVER_SOUND)
             
             # Tìm nút main nào đang hover, vẽ tooltip cho nút đó
             for btn in self.main_buttons:
@@ -436,7 +478,7 @@ class Scene:
                     break  # chỉ vẽ tooltip cho nút đầu tiên được hover
 
         for btn in self.support_buttons:
-                draw_button(self.screen, btn["rect"], btn["text"], FONT, mouse_pos, MENU_BUTTON_COLOR, MENU_BUTTON_HOVER)
+                draw_button(self.screen, btn["rect"], btn["text"], FONT, mouse_pos, MENU_BUTTON_COLOR, MENU_BUTTON_HOVER, hover_sound=HOVER_SOUND)
 
         if self.message and time.time() - self.message_time < 2:
             msg_surf = FONT.render(self.message, True, (255, 255, 0))                           # Tạo surface chữ màu vàng
@@ -450,6 +492,7 @@ class Scene:
             # ✅ Luôn cho phép click support buttons
             for btn in self.support_buttons:
                 if btn["rect"].collidepoint(event.pos):
+                    CLICK_SOUND.play()
                     return self.process_action(btn["action"])
                 
 
@@ -474,6 +517,7 @@ class Scene:
             # Kiểm tra main buttons
             for btn in self.main_buttons:
                 if btn["rect"].collidepoint(event.pos):
+                    CLICK_SOUND.play()
                     return self.process_action(btn["action"])
 
         elif event.type == pygame.QUIT:
