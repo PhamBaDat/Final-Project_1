@@ -3,6 +3,13 @@ import os
 import json
 import time
 import sys
+import re
+import math
+import random
+import pyttsx3
+import threading
+import queue
+
 
 pygame.init()
 
@@ -27,6 +34,10 @@ MENU_TEXT_COLOR = (255, 255, 224)        # Vàng nhạt kiểu "ivory"
 CLICK_SOUND = pygame.mixer.Sound(os.path.join("Final-Project_1", "Sounds", "Sound effect", "click.mp3"))
 HOVER_SOUND = pygame.mixer.Sound(os.path.join("Final-Project_1", "Sounds", "Sound effect", "hover.mp3"))
 FONT_PATH = os.path.join("Final-Project_1", "fonts", "Montserrat-Bold.ttf")
+CHARACTER_PATH = os.path.join("Final-Project_1", "character_images")
+run_animation = os.path.join(CHARACTER_PATH, "run.png")
+idle_animation = os.path.join(CHARACTER_PATH, "idle.png")
+jump_animation = os.path.join(CHARACTER_PATH, "jump.png")
 TITLE_FONT = pygame.font.Font(FONT_PATH, 64)
 TITLE_FONT_2 = pygame.font.Font(FONT_PATH, 55)
 BUTTON_FONT = pygame.font.Font(FONT_PATH, 40)
@@ -49,9 +60,153 @@ def render_text_with_shadow(text, font, color, shadow_color, offset=(3, 3)):
 title_surface = render_text_with_shadow("WHAT IF ... SAINT - PETERSBURG !", TITLE_FONT, (255, 255, 255), (0, 0, 0))
 screen.blit(title_surface, (WIDTH // 2 - title_surface.get_width() // 2, 80))
 
+# speak part
+engine = pyttsx3.init()
+# Tạo queue để gửi yêu cầu đọc
+speech_queue = queue.Queue()
+
+## For character ----------------------------
+class CharacterAnimator:
+    def __init__(self, idle_sprite_path, run_sprite_path, scale):
+        self.idle_frames = self.load_frames(idle_sprite_path, scale)
+        self.run_frames = self.load_frames(run_sprite_path, scale)
+
+    def load_frames(self, sprite_path, scale):
+        sprite_sheet = pygame.image.load(sprite_path).convert_alpha()
+
+        frame_width = 32
+        frame_height = 32
+        columns = 3
+        rows = 3
+
+        frames = []
+
+        for row in range(rows):
+            for col in range(columns):
+                rect = pygame.Rect(col * frame_width, row * frame_height, frame_width, frame_height)
+                frame = sprite_sheet.subsurface(rect)
+                frame = pygame.transform.scale(frame, (int(frame_width * scale), int(frame_height * scale)))
+                frames.append(frame)
+
+        return frames
+
+    def play_run_with_idle(self, screen, start_year=None, end_year=None, speed=300, frame_time=0.1, idle_time=1.0):
+        frame_index = 0
+        last_update = time.time()
+
+        start_x = WIDTH * 1/4
+        start_y = HEIGHT // 3
+        end_x = WIDTH * 3/5
+        end_y = HEIGHT // 3
+
+        x, y = start_x, start_y
+
+        dx = end_x - x
+        dy = end_y - y
+        distance = (dx ** 2 + dy ** 2) ** 0.5
+
+        if distance != 0:
+            dir_x = dx / distance
+            dir_y = dy / distance
+        else:
+            dir_x = dir_y = 0
+
+        clock = pygame.time.Clock()
+        start_anim_time = time.time()  # thời gian cho hiệu ứng nhấp nháy
+        background_img = pygame.image.load("Final-Project_1/character_images/run_background.jpg")
+        background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
+
+        # --- Run ---
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+            now = time.time()
+            if now - last_update > frame_time:
+                frame_index = (frame_index + 1) % len(self.run_frames)
+                last_update = now
+
+            move_step = speed * clock.get_time() / 1000.0
+            x += dir_x * move_step
+            y += dir_y * move_step
+
+            if (dir_x >= 0 and x >= end_x) or (dir_x < 0 and x <= end_x):
+                if (dir_y >= 0 and y >= end_y) or (dir_y < 0 and y <= end_y):
+                    running = False
+
+            screen.blit(background_img, (0, 0))
+            screen.blit(self.run_frames[frame_index], (x, y))
+
+            # 🟢 Hiệu ứng nhấp nháy to nhỏ:
+            elapsed = now - start_anim_time
+            base_radius = 20
+            pulse_radius = base_radius + 12 * abs(math.sin(elapsed * 2))
+
+
+            # 🟢 Vẽ điểm start:
+            if start_year is not None:
+                pygame.draw.circle(screen, (0, 200, 200), (int(start_x + 160), int(start_y + 32*12)), int(pulse_radius))
+                start_surface = FONT.render(str(start_year), True, WHITE)
+                start_rect = start_surface.get_rect(center=(start_x+160, start_y + 32*12 + 60))
+                screen.blit(start_surface, start_rect)
+
+            # 🟢 Vẽ điểm end:
+            if end_year is not None:
+                pygame.draw.circle(screen, (200, 100, 0), (int(end_x + 160), int(end_y + 32*12)), int(pulse_radius))
+                end_surface = FONT.render(str(end_year), True, WHITE)
+                end_rect = end_surface.get_rect(center=(end_x+160, end_y + 32*12 + 60))
+                screen.blit(end_surface, end_rect)
+
+            pygame.display.flip()
+            clock.tick(60)
+
+        # --- Idle ---
+        idle_index = 0
+        start_idle = time.time()
+        last_update = time.time()  # reset last_update
+        start_anim_time = time.time()  # reset animation time
+
+        while time.time() - start_idle < idle_time:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+            now = time.time()
+            if now - last_update > frame_time:
+                idle_index = (idle_index + 1) % len(self.idle_frames)
+                last_update = now
+
+            screen.blit(background_img, (0, 0))
+            screen.blit(self.idle_frames[idle_index], (x, y))
+
+            # 🟢 Vẽ điểm start:
+            if start_year is not None:
+                pygame.draw.circle(screen, (0, 200, 200), (int(start_x + 160), int(start_y + 32*12)), int(pulse_radius))
+                start_surface = FONT.render(str(start_year), True, WHITE)
+                start_rect = start_surface.get_rect(center=(start_x+160, start_y + 32*12 + 60))
+                screen.blit(start_surface, start_rect)
+
+            # 🟢 Vẽ điểm end:
+            if end_year is not None:
+                pygame.draw.circle(screen, (200, 100, 0), (int(end_x + 160), int(end_y + 32*12)), int(pulse_radius))
+                end_surface = FONT.render(str(end_year), True, WHITE)
+                end_rect = end_surface.get_rect(center=(end_x+160, end_y + 32*12 + 60))
+                screen.blit(end_surface, end_rect)
+
+            pygame.display.flip()
+            clock.tick(60)
+## ------------------------------------------
+
+
+## Game Functions and Buttons ----------------
 def play_music(path):
     if os.path.exists(path):
         pygame.mixer.music.load(path)
+        pygame.mixer.music.set_volume(0.5)  # Giảm âm lượng nhạc nền xuống 30%
         pygame.mixer.music.play(-1)  # -1 để loop vô hạn
     else:
         print(f"[WARN] Không tìm thấy nhạc nền: {path}")
@@ -173,6 +328,51 @@ def parse_position(pos, size, screen_size):
             return 0  # fallback
     return pos  # nếu là số thì giữ nguyên
 
+def parse_year_from_text(text):
+    match = re.search(r'\b(1[0-9]{3}|2[0-9]{3})\b', text)
+    if match:
+        return int(match.group(0))
+    return None
+
+def speak_async(text, engine):
+    def run():
+        engine.say(text)
+        engine.runAndWait()
+    threading.Thread(target=run).start()
+## ------------------------------------------
+
+
+
+## Speak Function ---------------------------
+# Thread để đọc văn bản
+def speech_thread():
+    while True:
+        # Đợi có yêu cầu đọc từ queue
+        text = speech_queue.get()
+        if text is None:  # None sẽ là tín hiệu kết thúc thread
+            break
+        engine.say(text)
+        engine.runAndWait()
+
+# Hàm nói trong async (sử dụng queue để gửi văn bản cần đọc)
+def speak_async(text):
+    # Đẩy văn bản vào queue
+    speech_queue.put(text)
+
+# Khởi động thread cho việc đọc văn bản
+speech_queue = queue.Queue()
+thread = threading.Thread(target=speech_thread, daemon=True)
+thread.start()
+
+# Để kết thúc thread, chúng ta cần gửi None vào queue
+def stop_speech_thread():
+    speech_queue.put(None)  # Gửi tín hiệu kết thúc
+    thread.join()
+## ------------------------------------------
+
+
+
+## Scene design -----------------------------
 def save_slot_menu(action="save", current_save_data=None, scene_name=None, scene_title=None):
     running = True
     slots = []
@@ -304,11 +504,12 @@ def load_scenes_data(json_path):
 scenes_data = load_scenes_data(SCENES_JSON_PATH)
 
 class Scene:
-    def __init__(self, screen, scene_name, title, text, image_path, buttons, save_data=None):
+    def __init__(self, screen, scene_name, title, text, image_path, buttons, save_data=None, skip_music=False):
         self.screen = screen
         self.scene_name = scene_name      # lưu tên scene
         self.title = title
         self.full_text = text
+        self.year = parse_year_from_text(self.full_text)
         self.image = None
         if image_path and os.path.exists(image_path):
             self.image = pygame.image.load(image_path)
@@ -318,6 +519,8 @@ class Scene:
         self.message = ""
         self.message_time = 0
         self.text_finished = False
+        self.initial_autoread_done = False  # Thêm dòng này
+        self.is_reading = False  # Thêm trạng thái đọc
 
         # Gán tooltip mặc định nếu chưa có
         self.buttons = assign_default_tooltips(self.buttons)
@@ -334,7 +537,7 @@ class Scene:
         self.current_line_index = 0
         self.char_index = 0
         self.displayed_text = ""
-        self.text_speed = 40  # ký tự/giây
+        self.text_speed = 30  # ký tự/giây
         self.last_update_time = time.time()
 
         # Khung thoại
@@ -344,10 +547,18 @@ class Scene:
         if self.scene_name != "menu":
             self.arrange_buttons_horizontally()
 
-        # Chạy nhạc nền nếu có
-        music_path = scenes_data.get(scene_name, {}).get("music")
-        if music_path:
-            play_music(music_path)
+        # Chạy nhạc nền nếu có, và nếu không skip
+        if not skip_music:
+            music_path = scenes_data.get(scene_name, {}).get("music")
+            if music_path:
+                play_music(music_path)
+            else:
+                # random music
+                music_folder = "Final-Project_1/Sounds/Musics"
+                files = [f for f in os.listdir(music_folder) if f.lower().endswith((".mp3", ".ogg", ".wav"))]
+                if files:
+                    random_music = os.path.join(music_folder, random.choice(files))
+                    play_music(random_music)
 
     def arrange_buttons_horizontally(self):
         n = len(self.main_buttons)
@@ -356,7 +567,7 @@ class Scene:
         # Giả sử tất cả button có cùng kích thước (lấy của button đầu)
         btn_width = self.main_buttons[0]["rect"][2]
         btn_height = self.main_buttons[0]["rect"][3]
-        spacing = 50  # khoảng cách giữa các nút
+        spacing = 200  # khoảng cách giữa các nút
 
         total_width = n * btn_width + (n - 1) * spacing
         start_x = (WIDTH - total_width) // 2
@@ -412,6 +623,12 @@ class Scene:
         if self.text_finished:
             return
 
+        # Tự động đọc dòng đầu tiên khi chưa từng đọc
+        if not self.initial_autoread_done and self.current_line_index == 0 and self.char_index == 0:
+            speak_async(self.lines[0])
+            self.initial_autoread_done = True
+            self.is_reading = True
+
         now = time.time()  # Lấy thời gian hiện tại (giây từ epoch)
         elapsed = now - self.last_update_time  # Thời gian trôi qua kể từ lần cập nhật cuối
         chars_to_add = int(elapsed * self.text_speed)  # Số ký tự cần thêm dựa trên tốc độ text_speed
@@ -422,10 +639,9 @@ class Scene:
             self.displayed_text = current_line[:self.char_index]
             self.last_update_time = now
 
-            # Nếu đã hiển thị hết dòng hiện tại thì thôi chờ click để chuyển dòng
+            # Nếu đã hiển thị hết dòng hiện tại thì chuyển sang dòng tiếp theo khi click
             if self.char_index == len(current_line):
-                # Có thể set flag chờ click nếu muốn, hoặc để ở đây thôi
-                pass
+                self.is_reading = False # Reset reading status
       
     def draw(self):
         self.screen.fill((0,0,0))
@@ -510,6 +726,12 @@ class Scene:
                         self.char_index = 0
                         self.displayed_text = ""
                         self.last_update_time = time.time()
+
+                        # Đọc dòng mới (sau khi chuyển sang dòng mới)
+                        self.is_reading = False  # Đảm bảo không đọc lại dòng cũ
+                        if not self.is_reading:
+                            speak_async(self.lines[self.current_line_index])
+                            self.is_reading = True
                     else:
                         self.text_finished = True
                 return None
@@ -558,11 +780,11 @@ class Scene:
 
         return action
 
-def create_scene(name, save_data=None):
+def create_scene(name, save_data=None, skip_music=False):
     data = scenes_data.get(name)
     if not data:
         return None
-    return Scene(screen, name, data["title"], data["text"], data["image_path"], data["buttons"], save_data)
+    return Scene(screen, name, data["title"], data["text"], data["image_path"], data["buttons"], save_data, skip_music)
 
 def run_scene(scene_manager):
     running = True
@@ -589,24 +811,66 @@ def run_scene_name(name, save_data=None):
     return run_scene(scene)
 
 def main():
-    current_scene = "menu"
+    current_scene_name = "menu"
     current_save_data = None
+    current_scene_year = None
+    NO_ANIMATION_SCENES = ["menu", "scene1", "save", "exit"]
+
+    animator = CharacterAnimator(idle_animation, run_animation, scale=10)
+
     while True:
-        next_scene = run_scene_name(current_scene, current_save_data)
-        if next_scene in [None, "exit"]:
+        # Tạo scene hiện tại để lấy year
+        current_scene_obj = create_scene(current_scene_name, current_save_data)
+        if current_scene_obj:
+            current_scene_year = current_scene_obj.year
+
+        # Chạy scene
+        next_scene_name = run_scene(current_scene_obj)
+
+        if next_scene_name in [None, "exit"]:
             break
-        
-        # Nếu next_scene là dict chứa save_data
-        if isinstance(next_scene, dict):
-            current_save_data = next_scene
-            current_scene = current_save_data.get("scene", current_scene) # Giữ nguyên nếu không có scene mới
-        else:
-            current_scene = next_scene
-            # Cập nhật scene vào save_data nếu có
-            if current_save_data:
-                current_save_data["scene"] = current_scene
+
+        pygame.mixer.music.fadeout(2000)  # nhỏ dần trong 2 giây
+
+        # Nếu next_scene là dict → lấy name từ save_data
+        if isinstance(next_scene_name, dict):
+            current_save_data = next_scene_name
+            next_scene_name = current_save_data.get("scene", current_scene_name)
+
+        # Tạo scene tiếp theo để lấy year
+        next_scene_obj = create_scene(next_scene_name, current_save_data, skip_music=True)
+        next_scene_year = next_scene_obj.year if next_scene_obj else None
+
+        # 👉 Kiểm tra nếu là scene dạng "sceneX" và không nằm trong NO_ANIMATION_SCENES
+        if (isinstance(next_scene_name, str)
+            and next_scene_name.startswith("scene")
+            and next_scene_name not in NO_ANIMATION_SCENES):
+
+            animator.play_run_with_idle(
+                screen,
+                start_year=current_scene_year,
+                end_year=next_scene_year,
+                speed=300,
+                idle_time=1.0
+            )
+
+        # Cập nhật scene mới
+        current_scene_name = next_scene_name
+        if current_save_data:
+            current_save_data["scene"] = current_scene_name
 
     pygame.quit()
 
+## ------------------------------------------
+
 if __name__ == "__main__":
+
+    engine = pyttsx3.init()
+    engine.setProperty('volume', 1.0)  # Tăng âm lượng lên tối đa
+    voices = engine.getProperty('voices')
+    for voice in voices:
+        if "Microsoft Irina Desktop - Russian" in voice.name:
+            engine.setProperty('voice', voice.id)
+            break
+
     main()
