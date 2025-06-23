@@ -60,10 +60,62 @@ def render_text_with_shadow(text, font, color, shadow_color, offset=(3, 3)):
 title_surface = render_text_with_shadow("WHAT IF ... SAINT - PETERSBURG !", TITLE_FONT, (255, 255, 255), (0, 0, 0))
 screen.blit(title_surface, (WIDTH // 2 - title_surface.get_width() // 2, 80))
 
-# speak part
-engine = pyttsx3.init()
-# Tạo queue để gửi yêu cầu đọc
-speech_queue = queue.Queue()
+
+
+## For speak part ---------------------------
+class SafeTTS:
+    def __init__(self):
+        self.engine = None
+        self.active = False
+        self.lock = threading.Lock()
+        self.current_thread = None
+        
+    def init_engine(self):
+        with self.lock:
+            if self.engine is None:
+                self.engine = pyttsx3.init()
+                self.engine.setProperty('volume', 1.0)
+                voices = self.engine.getProperty('voices')
+                for voice in voices:
+                    if "Microsoft Irina Desktop - Russian" in voice.name:
+                        self.engine.setProperty('voice', voice.id)
+                        break
+    
+    def speak(self, text):
+        self.stop()
+        
+        def _speak():
+            self.init_engine()
+            if not self.active:
+                return
+                
+            try:
+                self.engine.say(text)
+                self.engine.runAndWait()
+            except Exception as e:
+                print(f"Speech error: {e}")
+            finally:
+                with self.lock:
+                    self.active = False
+    
+        with self.lock:
+            self.active = True
+            self.current_thread = threading.Thread(target=_speak, daemon=True)
+            self.current_thread.start()
+    
+    def stop(self):
+        with self.lock:
+            self.active = False
+            if self.engine:
+                try:
+                    self.engine.stop()
+                except:
+                    pass
+                self.engine = None  # Reset engine
+            if self.current_thread and self.current_thread.is_alive():
+                self.current_thread.join(timeout=0.1)
+## ------------------------------------------
+
 
 ## For character ----------------------------
 class CharacterAnimator:
@@ -333,43 +385,7 @@ def parse_year_from_text(text):
     if match:
         return int(match.group(0))
     return None
-
-def speak_async(text, engine):
-    def run():
-        engine.say(text)
-        engine.runAndWait()
-    threading.Thread(target=run).start()
 ## ------------------------------------------
-
-
-
-## Speak Function ---------------------------
-# Thread để đọc văn bản
-def speech_thread():
-    while True:
-        # Đợi có yêu cầu đọc từ queue
-        text = speech_queue.get()
-        if text is None:  # None sẽ là tín hiệu kết thúc thread
-            break
-        engine.say(text)
-        engine.runAndWait()
-
-# Hàm nói trong async (sử dụng queue để gửi văn bản cần đọc)
-def speak_async(text):
-    # Đẩy văn bản vào queue
-    speech_queue.put(text)
-
-# Khởi động thread cho việc đọc văn bản
-speech_queue = queue.Queue()
-thread = threading.Thread(target=speech_thread, daemon=True)
-thread.start()
-
-# Để kết thúc thread, chúng ta cần gửi None vào queue
-def stop_speech_thread():
-    speech_queue.put(None)  # Gửi tín hiệu kết thúc
-    thread.join()
-## ------------------------------------------
-
 
 
 ## Scene design -----------------------------
@@ -519,6 +535,7 @@ class Scene:
         self.message = ""
         self.message_time = 0
         self.text_finished = False
+        self.tts = SafeTTS()
         self.initial_autoread_done = False  # Thêm dòng này
         self.is_reading = False  # Thêm trạng thái đọc
 
@@ -559,6 +576,10 @@ class Scene:
                 if files:
                     random_music = os.path.join(music_folder, random.choice(files))
                     play_music(random_music)
+
+    def speak_async(self, text):
+        print(f"Reading: {text}")
+        self.tts.speak(text)
 
     def arrange_buttons_horizontally(self):
         n = len(self.main_buttons)
@@ -625,7 +646,7 @@ class Scene:
 
         # Tự động đọc dòng đầu tiên khi chưa từng đọc
         if not self.initial_autoread_done and self.current_line_index == 0 and self.char_index == 0:
-            speak_async(self.lines[0])
+            self.speak_async(self.lines[0])
             self.initial_autoread_done = True
             self.is_reading = True
 
@@ -639,9 +660,20 @@ class Scene:
             self.displayed_text = current_line[:self.char_index]
             self.last_update_time = now
 
-            # Nếu đã hiển thị hết dòng hiện tại thì chuyển sang dòng tiếp theo khi click
+            # Xử lý khi hoàn thành hiển thị dòng hiện tại
             if self.char_index == len(current_line):
-                self.is_reading = False # Reset reading status
+                self.is_reading = False
+                # Nếu có dòng tiếp theo và chưa đọc, tự động đọc
+                # if (self.current_line_index < len(self.lines) - 1 and 
+                #     not self.is_reading):
+                #     self.current_line_index += 1
+                #     self.char_index = 0
+                #     self.displayed_text = ""
+                #     self.last_update_time = now
+                #     self.speak_async(self.lines[self.current_line_index])
+                #     self.is_reading = True
+                # else:
+                #     self.text_finished = True
       
     def draw(self):
         self.screen.fill((0,0,0))
@@ -705,6 +737,7 @@ class Scene:
     def handle_event(self, event):
         # Khi người chơi click, ta có thể hiện luôn hết chữ đang chạy dần đễ đỡ chờ
         if event.type == pygame.MOUSEBUTTONDOWN:
+            self.tts.stop()
             # ✅ Luôn cho phép click support buttons
             for btn in self.support_buttons:
                 if btn["rect"].collidepoint(event.pos):
@@ -727,11 +760,8 @@ class Scene:
                         self.displayed_text = ""
                         self.last_update_time = time.time()
 
-                        # Đọc dòng mới (sau khi chuyển sang dòng mới)
-                        self.is_reading = False  # Đảm bảo không đọc lại dòng cũ
-                        if not self.is_reading:
-                            speak_async(self.lines[self.current_line_index])
-                            self.is_reading = True
+                        self.speak_async(self.lines[self.current_line_index])
+                        # Không gọi speak_async ở đây, để update_text tự xử lý
                     else:
                         self.text_finished = True
                 return None
@@ -860,17 +890,7 @@ def main():
             current_save_data["scene"] = current_scene_name
 
     pygame.quit()
-
 ## ------------------------------------------
 
 if __name__ == "__main__":
-
-    engine = pyttsx3.init()
-    engine.setProperty('volume', 1.0)  # Tăng âm lượng lên tối đa
-    voices = engine.getProperty('voices')
-    for voice in voices:
-        if "Microsoft Irina Desktop - Russian" in voice.name:
-            engine.setProperty('voice', voice.id)
-            break
-
     main()
