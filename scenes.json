@@ -27,7 +27,7 @@
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "Выступите в роли наблюдателя и проследите за ходом войны между Российской империей и шведами за господство на Балтийском море.", "action": "scene3"},
       {"rect": [600, 580, 300, 100], "text": "Вступайте в армию, чтобы ускорить процесс завоевания новой территории, необходимой для развития Российской империи.", "action": "scene26"},
-      {"rect": [600, 580, 300, 100], "text": "Он выступает в роли советника и оказывает влияние на Петра I, чтобы тот искал место для окна в Европу, новый город, на который он рассчитывал.", "action": "scene101"},
+      {"rect": [800, 580, 300, 100], "text": "Он выступает в роли советника и оказывает влияние на Петра I, чтобы тот искал место для окна в Европу, новый город, на который он рассчитывал.", "action": "scene101"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -38,6 +38,7 @@
     "image_path": "Final-Project_1/Images/3.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "Замаскироваться под голландского купца и повлиять на Петра, чтобы тот построил островную крепость для защиты входа в Неву. А также построить на острове корабли для защиты Балтики", "action": "scene4"},
+      {"rect": [400, 580, 300, 100], "text": "Насаждая идею «Столица любой ценой», Петр в 1705 году приказал перевезти двор, министерства и казну в Санкт-Петербург до завершения строительства оборонительных сооружений. Это было вызвано навязчивым желанием узаконить свое «окно в Европу» и дипломатическим давлением (он хотел произвести впечатление на европейских послов).", "action": "scene34"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -276,6 +277,7 @@
     "image_path": "Final-Project_1/Images/25.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -306,6 +308,7 @@
     "image_path": "Final-Project_1/Images/28.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -348,6 +351,7 @@
     "image_path": "Final-Project_1/Images/32.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -358,6 +362,7 @@
     "image_path": "Final-Project_1/Images/33.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -367,7 +372,7 @@
     "text": "Карл XII Шведский не упустил возможности. После вторжения в Россию в 1708 году, вместо того чтобы идти в Украину, он направил свои войска на север, чтобы взять Санкт-Петербург. Не имея Кронштадта и действующего флота, шведы легко блокировали бы Неву. Город, который еще только строился и имел слабую сухопутную оборону, пал бы в течение нескольких недель.",
     "image_path": "Final-Project_1/Images/34.jpg",
     "buttons": [
-      {"rect": [400, 580, 200, 50], "text": "Continue", "action": "scene35"},
+      {"rect": [400, 580, 200, 50], "text": "Continue", "tooltip_text": "Continue", "action": "scene35"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -377,7 +382,8 @@
     "text": "В 200, Этот регион остается резервным портом, а из-за климата и болезней на карте образовалась пустая область.",
     "image_path": "Final-Project_1/Images/35.jpg",
     "buttons": [
-      {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": ["center", "auto", 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": ["center", "auto", 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -439,6 +445,7 @@
     "image_path": "Final-Project_1/Images/41.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -459,6 +466,7 @@
     "image_path": "Final-Project_1/Images/43.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -560,6 +568,7 @@
     "image_path": "Final-Project_1/Images/53.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -600,6 +609,7 @@
     "image_path": "Final-Project_1/Images/57.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -610,6 +620,7 @@
     "image_path": "Final-Project_1/Images/58.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -630,6 +641,7 @@
     "image_path": "Final-Project_1/Images/60.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -650,6 +662,7 @@
     "image_path": "Final-Project_1/Images/62.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -670,6 +683,7 @@
     "image_path": "Final-Project_1/Images/64.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -690,6 +704,7 @@
     "image_path": "Final-Project_1/Images/66.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -700,6 +715,7 @@
     "image_path": "Final-Project_1/Images/67.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -720,6 +736,7 @@
     "image_path": "Final-Project_1/Images/69.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -740,6 +757,7 @@
     "image_path": "Final-Project_1/Images/71.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -760,6 +778,7 @@
     "image_path": "Final-Project_1/Images/73.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -790,6 +809,7 @@
     "image_path": "Final-Project_1/Images/76.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -820,6 +840,7 @@
     "image_path": "Final-Project_1/Images/79.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -830,6 +851,7 @@
     "image_path": "Final-Project_1/Images/80.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -840,6 +862,7 @@
     "image_path": "Final-Project_1/Images/81.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Mneu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -860,6 +883,7 @@
     "image_path": "Final-Project_1/Images/83.jpg",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
@@ -1161,8 +1185,8 @@
     "text": "1812 – Франция атакует и Санкт-Петербург горит. Во время войны с Наполеоном город легко сгорал из-за своей деревянной архитектуры.\n Многие документы и наследие были утеряны. Хотя он не был захвачен, культурная рана была настолько велика, что город утратил свою центральную роль.",
     "image_path": "Final-Project_1/Images/128.png",
     "buttons": [
-      {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
-      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
+      {"rect": ["center", "auto", 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
+      {"rect": ["center", "auto", 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
