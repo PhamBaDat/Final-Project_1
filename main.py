@@ -737,11 +737,13 @@ class Scene:
     def handle_event(self, event):
         # Khi người chơi click, ta có thể hiện luôn hết chữ đang chạy dần đễ đỡ chờ
         if event.type == pygame.MOUSEBUTTONDOWN:
-            self.tts.stop()
+            if self.current_line_index < len(self.lines) - 1:
+                self.tts.stop()
             # ✅ Luôn cho phép click support buttons
             for btn in self.support_buttons:
                 if btn["rect"].collidepoint(event.pos):
                     CLICK_SOUND.play()
+                    self.tts.stop()
                     return self.process_action(btn["action"])
                 
 
@@ -770,6 +772,7 @@ class Scene:
             for btn in self.main_buttons:
                 if btn["rect"].collidepoint(event.pos):
                     CLICK_SOUND.play()
+                    self.tts.stop()
                     return self.process_action(btn["action"])
 
         elif event.type == pygame.QUIT:
@@ -798,6 +801,16 @@ class Scene:
                 return save_data.get("scene", "scene1")
             else:
                 return save_data
+            
+        elif action == "try_again":
+            save_data = save_slot_menu(action="new_game")
+            if isinstance(save_data, dict):
+                return save_data.get("scene", "scene1")
+            else:
+                return save_data
+            
+        elif action == "endgame":
+            return "menu"
 
         elif action == "menu":
             return "menu"
