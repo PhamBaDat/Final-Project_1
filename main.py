@@ -287,10 +287,6 @@ def draw_button(screen, rect, text, font, mouse_pos, color_normal, color_hover, 
     text_rect = text_surface.get_rect(center=rect.center)
     screen.blit(text_surface, text_rect)
 
-    # Vẽ tooltip nếu hover và có tooltip_text
-    if is_hovered and tooltip_text:
-        draw_tooltip(screen, tooltip_text, font, rect.topright)
-
 def draw_tooltip(screen, text, font, pos, max_width=400, padding=10):
     # Tách text thành các dòng vừa max_width
     words = text.split(' ')
@@ -539,16 +535,15 @@ class Scene:
         self.initial_autoread_done = False  # Thêm dòng này
         self.is_reading = False  # Thêm trạng thái đọc
 
-        # Gán tooltip mặc định nếu chưa có
-        self.buttons = assign_default_tooltips(self.buttons)
-
         # Tách buttons thành 2 nhóm
-        support_actions = ("save", "menu", "exit", "new_game", "continue")
+        support_actions = ("save", "menu", "exit", "new_game", "continue", "endgame", "try_again")
         self.support_buttons = [btn for btn in self.buttons if btn["action"] in support_actions]
         self.main_buttons = [btn for btn in self.buttons if btn["action"] not in support_actions]
 
-        
+        # Gán tooltip mặc định cho main_buttons nếu chưa có
+        self.main_buttons = assign_default_tooltips(self.main_buttons)
 
+        
         # ---- CHỈNH PHẦN CHẠY CHỮ ----
         self.lines = self.full_text.split('\n')  # tách text theo dòng
         self.current_line_index = 0

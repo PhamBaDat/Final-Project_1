@@ -1162,7 +1162,7 @@
     "image_path": "Final-Project_1/Images/128.png",
     "buttons": [
       {"rect": [400, 580, 300, 100], "text": "End game", "tooltip_text": "End game", "action": "endgame"},
-      
+      {"rect": [400, 580, 300, 100], "text": "Try again", "tooltip_text": "End game", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
