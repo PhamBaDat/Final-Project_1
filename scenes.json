@@ -1096,8 +1096,8 @@
     "text": "2000: Невский стал «городом вечеринок» — полным баров, пешеходных улиц, потребительских зон... но лишенным производства, технологий, автономии.\nПоследствия: лопнувший пузырь туризма, отсутствие реальной экономики → быстрая рецессия.",
     "image_path": "Final-Project_1/Images/120.png",
     "buttons": [
-      {"rect": [400, 580, 300, 100], "text": "End game", "action": "end_game"},
-      {"rect": [400, 580, 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
+      {"rect": ["center", "auto", 300, 100], "text": "End game", "action": "end_game"},
+      {"rect": ["center", "auto", 300, 100], "text": "Try Again", "tooltip_text": "Try Again", "action": "try_again"},
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
