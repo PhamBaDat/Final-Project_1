@@ -842,11 +842,11 @@ def run_scene(scene_manager):
             # Nếu action là int (ví dụ slot số), hoặc None thì ignore hoặc xử lý tùy mục đích
     return None
 
-def run_scene_name(name, save_data=None):
-    scene = create_scene(name, save_data)
-    if scene is None:
-        return None
-    return run_scene(scene)
+# def run_scene_name(name, save_data=None):
+#     scene = create_scene(name, save_data)
+#     if scene is None:
+#         return None
+#     return run_scene(scene)
 
 def main():
     current_scene_name = "menu"
