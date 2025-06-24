@@ -862,7 +862,6 @@
       {"rect": [20, 20, 300, 50], "text": "Back to Menu", "action": "menu"},
       {"rect": [350, 20, 200, 50], "text": "Save Game", "action": "save"}
     ]
-    }
     },
     "scene101": {
     "title": "1700: Приказ об обследовании Невы",
