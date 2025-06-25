@@ -33,7 +33,7 @@ MENU_TEXT_COLOR = (255, 255, 224)        # Vàng nhạt kiểu "ivory"
 
 CLICK_SOUND = pygame.mixer.Sound(os.path.join("Final-Project_1", "Sounds", "Sound effect", "click.mp3"))
 HOVER_SOUND = pygame.mixer.Sound(os.path.join("Final-Project_1", "Sounds", "Sound effect", "hover.mp3"))
-FONT_PATH = os.path.join("Final-Project_1", "fonts", "Montserrat-Bold.ttf")
+FONT_PATH = os.path.join("Final-Project_1", "fonts", "Montserrat-Bold.ttf") 
 CHARACTER_PATH = os.path.join("Final-Project_1", "character_images")
 run_animation = os.path.join(CHARACTER_PATH, "run.png")
 idle_animation = os.path.join(CHARACTER_PATH, "idle.png")
@@ -841,12 +841,6 @@ def run_scene(scene_manager):
                 return action
             # Nếu action là int (ví dụ slot số), hoặc None thì ignore hoặc xử lý tùy mục đích
     return None
-
-# def run_scene_name(name, save_data=None):
-#     scene = create_scene(name, save_data)
-#     if scene is None:
-#         return None
-#     return run_scene(scene)
 
 def main():
     current_scene_name = "menu"
