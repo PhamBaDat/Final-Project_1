@@ -146,7 +146,7 @@ class CharacterAnimator:
         frame_index = 0
         last_update = time.time()
 
-        start_x = WIDTH * 1/4
+        start_x = WIDTH * 1/5
         start_y = HEIGHT // 3
         end_x = WIDTH * 3/5
         end_y = HEIGHT // 3
